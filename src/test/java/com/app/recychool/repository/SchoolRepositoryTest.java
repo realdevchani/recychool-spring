@@ -8,6 +8,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.Commit;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 
 @SpringBootTest
 @Transactional
@@ -16,6 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 class SchoolRepositoryTest {
     @Autowired
     private SchoolRepository schoolRepository;
+    @Test
+    public void findAlltest(){
+        List<School> schools = schoolRepository.findAll();
+        schools.forEach(s -> System.out.println(s.getSchoolName()));
+    }
 
     @Test
     public void schoolRepositoryTestsave100() {
