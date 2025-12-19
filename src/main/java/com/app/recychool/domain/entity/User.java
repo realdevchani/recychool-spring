@@ -7,6 +7,7 @@ import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 
 @Entity
 @Table(name = "TBL_USER")
@@ -64,4 +65,9 @@ public class User {
         this.userPhone = userResponseDTO.getUserPhone();
         if (this.userProvider == null) this.userProvider = "local";
     }
+
+    @OneToMany(mappedBy = "user")
+    private List<MovieReservation> movieReservations;
+
+
 }
