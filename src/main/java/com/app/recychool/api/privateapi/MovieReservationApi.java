@@ -21,8 +21,11 @@ public class MovieReservationApi {
     private final MovieReservationService movieReservationService;
 
     @PostMapping("/write")
-    public ResponseEntity<ApiResponseDTO> write(@RequestBody MovieReservation movieReservation) {
-        Map<String, Long> response = movieReservationService.save(movieReservation);
+    public ResponseEntity<ApiResponseDTO> write(
+            @RequestParam Long schoolId,
+            @RequestParam String movieTitle,
+            @RequestParam(defaultValue = "1") Long userId) {
+        Map<String, Long> response = movieReservationService.saveByIds(schoolId, movieTitle, userId);
         return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponseDTO.of("예약 성공", response));
     }
 

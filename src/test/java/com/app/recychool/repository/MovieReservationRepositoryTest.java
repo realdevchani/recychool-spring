@@ -74,7 +74,7 @@ class MovieReservationRepositoryTest {
                 .orElseThrow(() -> new IllegalStateException("tbl_movie 데이터가 없습니다"));
 
         School school = schools.stream()
-                .filter(s -> "덕수고등학교(행당분교)".equals(s.getSchoolName()))   // ⭐ 핵심: equals
+                .filter(s -> "덕수고등학교(행당분교)".equals(s.getSchoolName()))
                 .findFirst()
                 .orElseThrow(() -> new IllegalStateException("덕수고등학교(행당분교) 데이터가 없습니다"));
 
