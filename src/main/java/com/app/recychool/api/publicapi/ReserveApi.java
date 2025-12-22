@@ -11,6 +11,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
+import java.util.Map;
+
 @RestController("publicReserveApi")
 @RequestMapping("/api/public/schools")
 @RequiredArgsConstructor
@@ -49,6 +52,22 @@ public class ReserveApi {
                 ApiResponseDTO.of("주차 예약 페이지 조회 성공", response)
         );
     }
+
+    @GetMapping("/{schoolId}/parking/counts")
+    public ResponseEntity<ApiResponseDTO<Map<LocalDate, Integer>>> getParkingCounts(
+            @PathVariable Long schoolId
+    ) {
+        LocalDate today = LocalDate.now();
+        LocalDate end = today.plusMonths(1);
+
+        Map<LocalDate, Integer> result =
+                reserveQueryService.getParkingCountMap(schoolId, today, end);
+
+        return ResponseEntity.ok(
+                ApiResponseDTO.of("주차 날짜별 예약 수 조회 성공", result)
+        );
+    }
+
 }
 
 

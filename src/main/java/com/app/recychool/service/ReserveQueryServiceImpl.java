@@ -12,7 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -21,6 +23,7 @@ public class ReserveQueryServiceImpl implements ReserveQueryService {
 
     private final SchoolRepository schoolRepository;
     private final ReserveRepository reserveRepository;
+    private static final int PARKING_AREA_PER_CAR = 100;
 
     @Override
     public SchoolReservePageResponseDTO getReservePageInfo(
@@ -28,18 +31,20 @@ public class ReserveQueryServiceImpl implements ReserveQueryService {
             ReserveType reserveType
     ) {
 
-        // 학교 조회 (Repository 수정 없이)
+        // 1. 학교 조회
         School school = schoolRepository.findById(schoolId)
                 .orElseThrow(() -> new IllegalStateException("학교가 존재하지 않습니다."));
 
-        // 예약 불가 날짜 계산
+        // 2. 예약 불가 날짜 계산
         List<LocalDate> unavailableDates =
                 getUnavailableDates(schoolId, reserveType);
 
-        // 타입별 정책 값
+        // 3. 타입별 정책 값
         int price;
         int deposit;
         String usageTime;
+
+        Integer maxParkingCapacity = null;
 
         if (reserveType == ReserveType.PLACE) {
             price = 0;
@@ -49,41 +54,74 @@ public class ReserveQueryServiceImpl implements ReserveQueryService {
             price = 30_000;
             deposit = 0;
             usageTime = "18:00 ~ 08:00";
+
+            // ✔ 주차 최대 수용 인원 (면적 / 25, 소수점 버림)
+            maxParkingCapacity = school.getSchoolArea() / PARKING_AREA_PER_CAR;
         }
 
-        // DTO 반환
+        // 4. DTO 반환
         return SchoolReservePageResponseDTO.builder()
                 .schoolId(school.getId())
                 .schoolName(school.getSchoolName())
                 .schoolAddress(school.getSchoolAddress())
                 .schoolPhone(school.getSchoolPhone())
+
+                .schoolArea(school.getSchoolArea())
+                .schoolImageName(school.getSchoolImageName())
+                .schoolImagePath(school.getSchoolImagePath())
+
+                .reserveType(reserveType.name())
+                .usageTime(usageTime)
                 .price(price)
                 .deposit(deposit)
-                .usageTime(usageTime)
+
+                .maxParkingCapacity(maxParkingCapacity)
                 .unavailableDates(unavailableDates)
                 .build();
     }
 
-    // 캘린더 예약 불가 날짜
+    // PLACE 예약 불가 날짜
     private List<LocalDate> getUnavailableDates(
             Long schoolId,
             ReserveType reserveType
     ) {
 
-        // PLACE: 확정된 날짜 전부 불가
         if (reserveType == ReserveType.PLACE) {
             return reserveRepository
                     .findBySchoolIdAndReserveTypeAndReserveStatus(
                             schoolId,
                             ReserveType.PLACE,
-                            ReserveStatus.CONFIRMED
+                            ReserveStatus.COMPLETED
                     )
                     .stream()
                     .map(Reserve::getStartDate)
                     .toList();
         }
 
-        // PARKING: 현재는 제한 없음 (정책 확장 가능)
+        // PARKING: 날짜 제한 없음 (수용 인원으로만 제어)
         return List.of();
     }
+
+    public Map<LocalDate, Integer> getParkingCountMap(
+            Long schoolId,
+            LocalDate from,
+            LocalDate to
+    ) {
+        Map<LocalDate, Integer> result = new HashMap<>();
+
+        LocalDate date = from;
+        while (!date.isAfter(to)) {
+            long count = reserveRepository.countActiveParking(
+                    schoolId,
+                    ReserveType.PARKING,
+                    ReserveStatus.COMPLETED,
+                    date
+            );
+            result.put(date, (int) count);
+            date = date.plusDays(1);
+        }
+
+        return result;
+    }
+
 }

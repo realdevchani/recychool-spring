@@ -57,4 +57,21 @@ public class Reserve {
     private Integer reserveDeposit;
 
     private LocalDateTime createdAt;
+
+    public void cancel() {
+        if (this.reserveStatus == ReserveStatus.CANCELED) return;
+        this.reserveStatus = ReserveStatus.CANCELED;
+    }
+
+    public void expire() {
+        if (this.reserveStatus != ReserveStatus.COMPLETED) return;
+        this.reserveStatus = ReserveStatus.EXPIRED;
+    }
+
+    public void decreaseWaitingOrder() {
+        if (this.waitingOrder != null && this.waitingOrder > 0) {
+            this.waitingOrder--;
+        }
+    }
+
 }

@@ -1,7 +1,7 @@
 package com.app.recychool.domain.enums;
 
 public enum ReserveStatus {
-    CONFIRMED,
+    COMPLETED,
     WAITING,
     CANCELED,
     EXPIRED,
